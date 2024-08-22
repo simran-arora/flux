@@ -54,6 +54,8 @@ def prepare(t5: HFEmbedder, clip: HFEmbedder, img: Tensor, prompt: str | list[st
     if vec.shape[0] == 1 and bs > 1:
         vec = repeat(vec, "1 ... -> bs ...", bs=bs)
 
+    breakpoint()
+
     return {
         "img": img,
         "img_ids": img_ids.to(img.device),
@@ -87,7 +89,7 @@ def get_schedule(
 
     # shifting the schedule to favor high timesteps for higher signal images
     if shift:
-        # estimate mu based on linear estimation between two points
+        # eastimate mu based on linear estimation between two points
         mu = get_lin_function(y1=base_shift, y2=max_shift)(image_seq_len)
         timesteps = time_shift(mu, 1.0, timesteps)
 
@@ -110,6 +112,7 @@ def denoise(
     guidance_vec = torch.full((img.shape[0],), guidance, device=img.device, dtype=img.dtype)
     for t_curr, t_prev in zip(timesteps[:-1], timesteps[1:]):
         t_vec = torch.full((img.shape[0],), t_curr, dtype=img.dtype, device=img.device)
+        # breakpoint()
         pred = model(
             img=img,
             img_ids=img_ids,
