@@ -102,7 +102,7 @@ def print_load_warning(missing: list[str], unexpected: list[str]) -> None:
         print(f"Got {len(unexpected)} unexpected keys:\n\t" + "\n\t".join(unexpected))
 
 
-def load_flow_model(name: str, device: str | torch.device = "cuda", hf_download: bool = True):
+def load_flow_model(name: str, device: str | torch.device = "cuda", hf_download: bool = True, use_tk=False):
     # Loading Flux
     print("Init model")
     ckpt_path = configs[name].ckpt_path
@@ -115,7 +115,7 @@ def load_flow_model(name: str, device: str | torch.device = "cuda", hf_download:
         ckpt_path = hf_hub_download(configs[name].repo_id, configs[name].repo_flow)
 
     with torch.device("meta" if ckpt_path is not None else device):
-        model = Flux(configs[name].params).to(torch.bfloat16)
+        model = Flux(configs[name].params, use_tk).to(torch.bfloat16)
 
     if ckpt_path is not None:
         print("Loading checkpoint")
@@ -123,6 +123,7 @@ def load_flow_model(name: str, device: str | torch.device = "cuda", hf_download:
         sd = load_sft(ckpt_path, device=str(device))
         missing, unexpected = model.load_state_dict(sd, strict=False, assign=True)
         print_load_warning(missing, unexpected)
+        print(f"Loaded model")
     return model
 
 
@@ -194,7 +195,7 @@ class WatermarkEmbedder:
         return image
 
 
-# A fixed 48-bit message that was chosen at random
+# A fixed 48-bit message that was choosen at random
 WATERMARK_MESSAGE = 0b001010101111111010000111100111001111010100101110
 # bin(x)[2:] gives bits of x as str, use int to convert them to 0/1
 WATERMARK_BITS = [int(bit) for bit in bin(WATERMARK_MESSAGE)[2:]]
