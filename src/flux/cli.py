@@ -95,7 +95,7 @@ def parse_prompt(options: SamplingOptions) -> SamplingOptions | None:
 
 @torch.inference_mode()
 def main(
-    name: str = "flux-schnell",
+    name: str = "flux-dev",
     width: int = 1360,
     height: int = 768,
     seed: int | None = None,
@@ -129,7 +129,7 @@ def main(
         guidance: guidance value used for guidance distillation
         add_sampling_metadata: Add the prompt to the image Exif metadata
     """
-    nsfw_classifier = pipeline("image-classification", model="Falconsai/nsfw_image_detection", device=device)
+    nsfw_classifier = pipeline("image-classification", model="Falconsai/nsfw_image_detection", device=torch.device(device))
 
     if name not in configs:
         available = ", ".join(configs.keys())
@@ -148,7 +148,7 @@ def main(
         os.makedirs(output_dir)
         idx = 0
     else:
-        fns = [fn for fn in iglob(output_name.format(idx="*")) if re.search(r"img_[0-9]+\.jpg$", fn)]
+        fns = [fn for fn in iglob(output_name.format(idx="*")) if re.search(r"img_[0-9]\.jpg$", fn)]
         if len(fns) > 0:
             idx = max(int(fn.split("_")[-1].split(".")[0]) for fn in fns) + 1
         else:
@@ -247,7 +247,8 @@ def main(
 
 
 def app():
-    Fire(main)
+    main()
+    # Fire(main)
 
 
 if __name__ == "__main__":

@@ -29,8 +29,11 @@ class Flux(nn.Module):
     Transformer model for flow matching on sequences.
     """
 
-    def __init__(self, params: FluxParams):
+    def __init__(self, params: FluxParams, use_tk=False):
         super().__init__()
+
+        self.use_tk = use_tk
+        # print(f"Using tk: {use_tk}")
 
         self.params = params
         self.in_channels = params.in_channels
@@ -43,7 +46,7 @@ class Flux(nn.Module):
         if sum(params.axes_dim) != pe_dim:
             raise ValueError(f"Got {params.axes_dim} but expected positional dim {pe_dim}")
         self.hidden_size = params.hidden_size
-        self.num_heads = params.num_heads
+        self.num_heads = params.num_heads 
         self.pe_embedder = EmbedND(dim=pe_dim, theta=params.theta, axes_dim=params.axes_dim)
         self.img_in = nn.Linear(self.in_channels, self.hidden_size, bias=True)
         self.time_in = MLPEmbedder(in_dim=256, hidden_dim=self.hidden_size)
@@ -60,6 +63,7 @@ class Flux(nn.Module):
                     self.num_heads,
                     mlp_ratio=params.mlp_ratio,
                     qkv_bias=params.qkv_bias,
+                    use_tk=self.use_tk
                 )
                 for _ in range(params.depth)
             ]
